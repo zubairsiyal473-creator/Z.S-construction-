@@ -282,6 +282,23 @@
 </head>
 
 <body>
+<button id="openCustomizerBtn" type="button" style="position:fixed;right:16px;bottom:78px;z-index:9999;border:1px solid #c9a86a;border-radius:999px;padding:12px 16px;background:#111;color:#fff;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.35);cursor:pointer">⚙️ Customize</button>
+<div id="customizerModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.78);padding:18px;overflow:auto">
+  <div style="max-width:720px;margin:30px auto;background:#111;color:#fff;border:1px solid #333;border-radius:18px;padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Z.S Construction — Customize</h2>
+      <button id="closeCustomizerBtn" type="button" style="font-size:24px;background:none;border:0;color:#fff">×</button>
+    </div>
+    <p style="color:#aaa">Change your business details. Settings are saved on this phone/browser.</p>
+    <div id="customizerFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button id="saveCustomizerBtn" type="button" style="padding:12px 18px;border:0;border-radius:10px;background:#c9a86a;color:#111;font-weight:800">Save Changes</button>
+      <button id="resetCustomizerBtn" type="button" style="padding:12px 18px;border:1px solid #555;border-radius:10px;background:#222;color:#fff">Reset</button>
+    </div>
+    <p style="font-size:12px;color:#888;margin-top:15px">These changes are local to this browser. We can connect a free online database afterward if you want changes to appear for every visitor.</p>
+  </div>
+</div>
+
 
   <header class="nav">
     <a class="brand" href="#home">
@@ -626,5 +643,55 @@ ${document.getElementById("details").value || "Not specified"}`;
       );
     });
   </script>
+
+<script>
+(function(){
+const defaults={
+ business:"Z.S Construction",
+ phone1:"03012632181", phone2:"03232235612", phone3:"03282074410",
+ whatsapp:"03012632181",
+ facebook:"", instagram:"", tiktok:"",
+ address:"Khuda Ki Basti Phase 2, Surjani Town, Karachi",
+ price1:"", price2:"", price3:""
+};
+const fields=[
+["business","Business Name"],["phone1","Phone 1"],["phone2","Phone 2"],["phone3","Phone 3"],
+["whatsapp","WhatsApp Number"],["facebook","Facebook Link"],["instagram","Instagram Link"],
+["tiktok","TikTok Link"],["address","Address"],["price1","House 1 Price"],["price2","House 2 Price"],["price3","House 3 Price"]
+];
+const $=id=>document.getElementById(id);
+function get(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem("zsConstructionSettings")||"{}"))}catch(e){return {...defaults}}}
+function setField(id,label,value){
+ const wrap=document.createElement("label"); wrap.style.cssText="font-size:12px;color:#ccc";
+ const input=document.createElement("input"); input.id="zs_"+id; input.value=value||""; input.placeholder=label;
+ input.style.cssText="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border-radius:9px;border:1px solid #444;background:#080808;color:#fff";
+ wrap.append(label,input); $("customizerFields").appendChild(wrap);
+}
+function open(){
+ const s=get(); $("customizerFields").innerHTML="";
+ fields.forEach(([id,label])=>setField(id,label,s[id]));
+ $("customizerModal").style.display="block";
+}
+function save(){
+ const s={}; fields.forEach(([id])=>s[id]=$("zs_"+id).value.trim());
+ localStorage.setItem("zsConstructionSettings",JSON.stringify(s)); apply(); $("customizerModal").style.display="none";
+ alert("Changes saved ✓");
+}
+function apply(){
+ const s=get();
+ document.title=s.business+" | Construction";
+ document.querySelectorAll("a[href^='tel:']").forEach(a=>a.href="tel:"+s.phone1);
+ document.querySelectorAll("a[href*='wa.me']").forEach(a=>a.href="https://wa.me/"+s.whatsapp.replace(/\D/g,""));
+ const social={Facebook:s.facebook,Instagram:s.instagram,TikTok:s.tiktok};
+ document.querySelectorAll("a").forEach(a=>{for(const k in social)if(a.textContent.includes(k)&&social[k]){a.href=social[k];a.target="_blank"}});
+ document.querySelectorAll("[data-business-name]").forEach(e=>e.textContent=s.business);
+ document.querySelectorAll("[data-address]").forEach(e=>e.textContent=s.address);
+}
+$("openCustomizerBtn").onclick=open; $("closeCustomizerBtn").onclick=()=>$("customizerModal").style.display="none";
+$("saveCustomizerBtn").onclick=save; $("resetCustomizerBtn").onclick=()=>{localStorage.removeItem("zsConstructionSettings");open()};
+window.addEventListener("DOMContentLoaded",apply);
+})();
+</script>
+
 </body>
 </html>
